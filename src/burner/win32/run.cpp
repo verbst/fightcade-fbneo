@@ -1,5 +1,7 @@
 // Run module
 #include "burner.h"
+#include "groovy_output.h"		// Groovy MiSTer raster pacing (see RunIdle below)
+#include "groovy_log.h"			// @groovy diagnostic breadcrumbs
 #include <string.h>
 
 int bRunPause = 0;
@@ -255,10 +257,16 @@ int RunFrame(int bDraw, int bPause, int bInput)
 				GetInput(true);						// Update inputs
 				VidDisplayInputs(0, 0);
 				if (NetworkGetInput()) {	// Synchronize input with Network
+					// @groovy diagnostic: GGPO could not supply inputs, so this frame does
+					// NOT emulate. On-change, so a sustained stall is one line, not 60/s.
+					GroovyLogOnChange(GROOVY_LOG_ERROR, GROOVY_LOGKEY_NETSTALL,
+					                  "netplay: input STALLED (ggpo_synchronize_input false) - no emulation");
 					VidDisplayInputs(1, 1);
 					DetectFreeze();
 					return 1;
 				}
+				GroovyLogOnChange(GROOVY_LOG_ERROR, GROOVY_LOGKEY_NETSTALL,
+				                  "netplay: inputs flowing, frames advancing");
 				VidDisplayInputs(1, 2);
 				DetectTurbo();
 			} else {
@@ -298,6 +306,12 @@ int RunFrame(int bDraw, int bPause, int bInput)
 			RecordInput();					  	// Write input to file
 		}
 
+		// @groovy diagnostic: which RunFrame branch runs. On-change - one line when the
+		// emulator starts drawing, one if it stops. This says whether frames ever ran at all.
+		GroovyLogOnChange(GROOVY_LOG_ERROR, GROOVY_LOGKEY_FRAMEPATH,
+		                  "runframe: bDraw=%d bVidOkay=%d bDrvOkay=%d kNetGame=%d",
+		                  (int)bDraw, (int)bVidOkay, (int)bDrvOkay, (int)kNetGame);
+
 		// Render frame with video or audio
 		if (bDraw) {
 			if (nVidRunahead > 0 && nVidRunahead <= 3 && !kNetSpectator) {
@@ -323,6 +337,18 @@ int RunFrame(int bDraw, int bPause, int bInput)
 				pBurnSoundOut = nAudNextSound;
 				VidFrame();
 			}
+			// @groovy: mirror this frame's audio to the MiSTer.
+			//
+			// Here rather than inside the video tee because this site is reached by BOTH the
+			// runahead and the normal path - on the runahead path VidFrame() runs with
+			// pBurnSoundOut = NULL, so a tap in the video driver would see no audio at all.
+			// It sits inside if (bDraw), so it stays 1:1 with blits.
+			//
+			// Before AudSoundFrame(), because DxSoundFrame() applies the optional low-pass
+			// DSP to nAudNextSound in place. No-op unless Groovy audio is enabled and the
+			// core reports it is accepting audio.
+			GroovyAudioFrame(nAudNextSound, nBurnSoundLen);
+
 			// add audio from last frame
 			AudSoundFrame();
 		} else {
@@ -358,6 +384,48 @@ int RunIdle()
 {
 	if (bAudPlaying) {
 		AudSoundCheck();
+	}
+
+	// @groovy: MiSTer-master pacing.
+	//
+	// While the Groovy stream is up the CRT raster is the frame clock: GroovyWaitSync()
+	// blocks until the right moment to start the next frame, closing the loop against the
+	// real raster position via the ACK stream. FBNeo's timeGetTime() limiter below must
+	// therefore stand down - running both means two clocks beating against each other and
+	// dropped frames. Exactly one pacer, never both.
+	//
+	// This branch only engages once frames are actually going out (GroovyPacingActive()
+	// requires a live stream), so start-up, a refused mode and netplay all fall through to
+	// the stock path below unchanged.
+	if (GroovyPacingActive()) {
+		nFrameLast = timeGetTime();		// keep the stock accumulator anchored for when we stop
+
+		if (bRunPause && !bAppDoStep) {
+			RunFrame(1, 1, 1);			// Paused
+			VidPaint(3);
+			AudBlankSound();
+			GroovyWaitSync();			// still required: it is the RIO completion drain
+			GroovyKeepAlive();			// paused = no blits, and the core drops a silent session
+			return 0;
+		}
+		bAppDoStep = 0;
+
+		if (bAppDoFast) {				// FFWD: extra frames emulate but are never blitted
+			for (int i = 0; i < nFastSpeed; i++) {
+				RunFrame(0, 0, 1);
+			}
+		}
+
+		RunFrame(1, 0, 1);				// exactly one displayed frame per raster, no frameskip
+		nFramesRendered++;
+		VidPaint(3);
+		GroovyWaitSync();
+
+		if (nDoFPS < nFramesRendered) {
+			DisplayFPS();
+			nDoFPS = nFramesRendered + 30;
+		}
+		return 0;
 	}
 
 	// Render loop with sound
@@ -443,6 +511,27 @@ int RunIdle()
 	// render
 	nFramesRendered++;
 	VidPaint(3);
+
+	// @groovy: app-master frame sync.
+	//
+	// Reached once per DISPLAYED frame on the stock path - which is the path netplay always
+	// takes, because GGPO must stay the frame clock there and the Groovy pacing branch above
+	// deliberately excludes kNetGame. Mid-frames and GGPO rollbacks happen between two of these
+	// calls, so they are invisible to the client except as elapsed time.
+	//
+	// What we need from it is the RIO send-completion drain, which is private and has WaitSync as
+	// its only caller. But be clear about what else comes with that: WaitSync computes
+	// sleepTime = m_frameTime - m_emulationTime and BUSY-SPINS the remainder, so it does behave as
+	// a second pacer whenever the modeline period exceeds what this loop has already spent.
+	//
+	// (An earlier version of this comment claimed the frame period is always already spent by the
+	// time we arrive, so the sleep computes to zero. That is only true when GGPO is the
+	// bottleneck. Measured on hardware: ~0.2ms of spin per frame in sessions where GGPO kept
+	// blocking on the peer, but ~10ms in sessions where it never blocked - the spin is simply the
+	// complement of this loop's own work, and is largest when netplay is healthiest. Left as-is
+	// deliberately: it only consumes slack that would otherwise be idle, and every alternative
+	// either degrades the raster servo or re-implements the client's timing from a second clock.)
+	GroovyFrameSync();
 
 	// fps
 	if (nDoFPS < nFramesRendered) {

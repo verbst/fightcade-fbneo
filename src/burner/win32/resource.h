@@ -50,6 +50,7 @@
 #define IDD_DOWNLOAD_LOCAL					82
 #define IDD_CHOOSEMONITOR					83
 #define IDD_LUA                         84
+#define IDD_GROOVYMISTER					85
 
 #define IDR_MENU                        	100
 #define IDR_MENU_BLITTER_1					110
@@ -659,6 +660,31 @@
 #define MENU_CHEATSEARCH_EXIT				10634
 #define MENU_LANGUAGE_RESET					10635
 #define MENU_BLITTEROPTIONS					10643
+#define MENU_GROOVYMISTER					10644
+
+// Groovy MiSTer settings dialog (IDD_GROOVYMISTER)
+#define IDC_GM_ENABLE						21200
+#define IDC_GM_HOST							21201
+#define IDC_GM_PRESET						21202
+#define IDC_GM_SRINI						21203
+#define IDC_GM_CODEC						21204
+#define IDC_GM_NLCPACK						21205
+#define IDC_GM_NEAR							21206
+#define IDC_GM_RGBMODE						21207
+#define IDC_GM_MTU							21208
+#define IDC_GM_VCOUNTSYNC					21209
+#define IDC_GM_AUDIO						21210
+#define IDC_GM_INPUTS						21211
+#define IDC_GM_CRTCAP						21212
+#define IDC_GM_ROTATEVERT					21213
+#define IDC_GM_AUTORECONNECT				21214
+#define IDC_GM_SUPPRESSLOCAL				21215
+#define IDC_GM_LOGLEVEL						21216
+#define IDC_GM_STATUS						21217
+#define IDC_GM_LOG							21218
+#define IDC_GM_SELFTEST						21219
+#define IDC_GM_APPLY						21220
+#define IDC_GM_LOGFILE						21221
 #define MENU_VIDEOVSYNC						10646
 #define MENU_MONITORAUTOCHECK				10650
 #define MENU_CLRMAME_PRO_XML				10651

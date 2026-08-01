@@ -1,6 +1,10 @@
 // Video Output - (calls all the Vid Out plugins)
 #include "burner.h"
 
+#if defined (BUILD_WIN32)
+ #include "groovy_output.h"		// Groovy MiSTer frame tee (see VidDoFrame below)
+#endif
+
 #define DEFAULT_IMAGE_WIDTH (304)
 #define DEFAULT_IMAGE_HEIGHT (224)
 
@@ -421,6 +425,22 @@ static INT32 VidDoFrame(bool bRedraw)
 		pBurnDraw = NULL;
 		nBurnPitch = 0;
 	}
+
+#if defined (BUILD_WIN32)
+	// @groovy: tee the finished frame to the MiSTer.
+	//
+	// Here rather than in a video plugin because pVidImage is populated by BOTH branches
+	// above by this point (the BDF_16BIT_ONLY path having gone through the translate
+	// callback), so this works with whatever blitter the user has selected and leaves
+	// Fightcade's D3D9 overlay - chat, scores, input display - completely intact.
+	//
+	// It is also rollback-safe for free: GGPO re-simulates through RunFrame(0,0,0), which
+	// takes the bDraw == 0 path and never calls VidFrame(), so a hook here cannot observe a
+	// rolled-back frame. Same for auto-frameskip mid-frames and netplay skip frames.
+	//
+	// No-op when Groovy is disabled.
+	GroovyFrameReady();
+#endif
 
 	return nRet;
 }

@@ -2,6 +2,20 @@
 #include "vid_detector.h"
 #include "detector_buffers.h"
 
+// *** Detector data is COMPILED IN, and its absence is otherwise completely silent. ***
+//
+// detector_buffers.h / detector_loaders.h are generated (src/dep/scripts/detectors.pl). Both ship
+// as empty placeholder files, so a build that skips the generator still compiles and runs - it just
+// produces a table containing nothing but its terminator. Every lookup below then misses,
+// GameDetector::Load() falls through to ST_NONE, and the emulator plays perfectly while silently
+// never detecting a round start or a winner. No error, no log, no crash: round counters and RANKED
+// MATCH REPORTING simply stop working. That cost a full debugging session to find once.
+//
+// The generator defines the sentinel, so requiring it converts that into a build failure.
+#if !defined(FBNEO_DETECTORS_GENERATED) && !defined(FBNEO_ALLOW_NO_DETECTORS)
+ #error "Game detector data has not been generated - see docs/DETECTORS.md. Run detectors.pl, or define FBNEO_ALLOW_NO_DETECTORS to deliberately build without detectors (disables round counters and ranked match reporting)."
+#endif
+
 struct DetectorBuffer {
 	char name[128];
 	const unsigned char *buffer;

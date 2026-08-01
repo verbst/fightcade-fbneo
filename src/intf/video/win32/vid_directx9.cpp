@@ -3,6 +3,7 @@
 #include "vid_softfx.h"
 #include "vid_overlay.h"
 #include "vid_effect.h"
+#include "groovy_output.h"		// GroovyWants32Bit() - see dx9AltTextureInit()
 
 //#ifdef _MSC_VER
 #pragma comment(lib, "d3d9")
@@ -879,9 +880,9 @@ static int dx9Init()
 		d3dpp.hDeviceWindow = hVidWnd;
 		d3dpp.Windowed = bVidDX9WinFullscreen;
 		d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-		d3dpp.PresentationInterval = bVidVSync ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+		d3dpp.PresentationInterval = (bVidVSync && !GroovySuppressHostVSync()) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;	// @groovy: host vsync would fight GroovyWaitSync()
 		if (bVidDX9WinFullscreen) {
-			d3dpp.SwapEffect = bVidVSync || bVidDX9LegacyRenderer ? D3DSWAPEFFECT_COPY : D3DSWAPEFFECT_FLIPEX;
+			d3dpp.SwapEffect = ((bVidVSync && !GroovySuppressHostVSync()) || bVidDX9LegacyRenderer) ? D3DSWAPEFFECT_COPY : D3DSWAPEFFECT_FLIPEX;
 			MoveWindow(hScrnWnd, 0, 0, d3dpp.BackBufferWidth, d3dpp.BackBufferHeight, TRUE);
 		}
 	} else {
@@ -890,11 +891,11 @@ static int dx9Init()
 		d3dpp.BackBufferWidth = rect.right - rect.left;
 		d3dpp.BackBufferHeight = rect.bottom - rect.top;
 		d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
-		d3dpp.SwapEffect = bVidVSync || bVidDX9LegacyRenderer ? D3DSWAPEFFECT_COPY : D3DSWAPEFFECT_FLIPEX;
+		d3dpp.SwapEffect = ((bVidVSync && !GroovySuppressHostVSync()) || bVidDX9LegacyRenderer) ? D3DSWAPEFFECT_COPY : D3DSWAPEFFECT_FLIPEX;
 		d3dpp.BackBufferCount = 1;
 		d3dpp.hDeviceWindow = hVidWnd;
 		d3dpp.Windowed = TRUE;
-		d3dpp.PresentationInterval = bVidVSync ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+		d3dpp.PresentationInterval = (bVidVSync && !GroovySuppressHostVSync()) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;	// @groovy: host vsync would fight GroovyWaitSync()
 	}
 
 	D3DDISPLAYMODEEX dmex;
@@ -1540,7 +1541,12 @@ static int dx9AltTextureInit()
 	nGameImageHeight = nVidImageHeight;
 
 	//nVidImageDepth = nVidScrnDepth;
-	nVidImageDepth = 16;
+	// @groovy: a Groovy MiSTer session streaming RGB888 needs the emulation rendered at the
+	// screen depth (32bpp), otherwise the frame is quantised to 5/6/5 before the wire ever
+	// sees it - which would cap quality regardless of the codec. Everything else keeps
+	// Fightcade's hardcoded 16bpp exactly as before, so non-Groovy users see no change.
+	// The two guards below still win, including the user's Force 16-bit option.
+	nVidImageDepth = GroovyWants32Bit() ? nVidScrnDepth : 16;
 
 	// Determine if we should use a texture format different from the screen format
 	if ((bDrvOkay && VidSoftFXCheckDepth(nPreScaleEffect, 32) != 32) || (bDrvOkay && bVidForce16bitDx9Alt)) {
@@ -1796,9 +1802,9 @@ static int dx9AltInit()
 		d3dpp.hDeviceWindow = hVidWnd;
 		d3dpp.Windowed = bVidDX9WinFullscreen;
 		d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-		d3dpp.PresentationInterval = bVidVSync ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+		d3dpp.PresentationInterval = (bVidVSync && !GroovySuppressHostVSync()) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;	// @groovy: host vsync would fight GroovyWaitSync()
 		if (bVidDX9WinFullscreen) {
-			d3dpp.SwapEffect = bVidVSync || bVidDX9LegacyRenderer ? D3DSWAPEFFECT_COPY : D3DSWAPEFFECT_FLIPEX;
+			d3dpp.SwapEffect = ((bVidVSync && !GroovySuppressHostVSync()) || bVidDX9LegacyRenderer) ? D3DSWAPEFFECT_COPY : D3DSWAPEFFECT_FLIPEX;
 			MoveWindow(hScrnWnd, 0, 0, d3dpp.BackBufferWidth, d3dpp.BackBufferHeight, TRUE);
 		}
 	} else {
@@ -1807,11 +1813,11 @@ static int dx9AltInit()
 		d3dpp.BackBufferWidth = rect.right - rect.left;
 		d3dpp.BackBufferHeight = rect.bottom - rect.top;
 		d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
-		d3dpp.SwapEffect = bVidVSync || bVidDX9LegacyRenderer ? D3DSWAPEFFECT_COPY : D3DSWAPEFFECT_FLIPEX;
+		d3dpp.SwapEffect = ((bVidVSync && !GroovySuppressHostVSync()) || bVidDX9LegacyRenderer) ? D3DSWAPEFFECT_COPY : D3DSWAPEFFECT_FLIPEX;
 		d3dpp.BackBufferCount = 1;
 		d3dpp.hDeviceWindow = hVidWnd;
 		d3dpp.Windowed = TRUE;
-		d3dpp.PresentationInterval = bVidVSync ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+		d3dpp.PresentationInterval = (bVidVSync && !GroovySuppressHostVSync()) ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;	// @groovy: host vsync would fight GroovyWaitSync()
 	}
 
 	D3DDISPLAYMODEEX dmex;

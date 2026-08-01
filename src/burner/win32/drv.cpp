@@ -1,6 +1,7 @@
 // Driver Init module
 #include "burner.h"
 #include "neocdlist.h"
+#include "groovy_output.h"		// GroovySessionClose() on driver exit
 
 int bDrvOkay = 0;						// 1 if the Driver has been initted okay, and it's okay to use the BurnDrv functions
 
@@ -280,6 +281,13 @@ int DrvExit()
 		NeoCDZRateChangeback();
 
 		StopReplay();
+
+		// @groovy: close the MiSTer session before the video layer goes away. The session
+		// is deliberately independent of VidInit/VidExit - a mid-game resolution change
+		// (SFIII's widescreen toggle, for one) tears video down and back up, and that must
+		// cost a CmdSwitchres, not a full reconnect - so unloading the driver is where it
+		// actually ends.
+		GroovySessionClose("driver exit (DrvExit)");
 
 		VidExit();
 

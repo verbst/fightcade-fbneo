@@ -1602,6 +1602,21 @@ static INT32 GameInpAutoOne(struct GameInp* pgi, char* szi)
 				GamcMisc(pgi, szi, i);
 				GamcPlayerHotRod(pgi, szi, i, 0x01, nSlide);
 				break;
+#if defined (BUILD_WIN32)
+			// @groovy: the MiSTer's own pads, presented as joystick devices 8 and 9.
+			// GamcPlayer() builds nJoyBase = 0x4000 | (nDevice << 8), so these need no new
+			// mapping code at all - the sub-code layout mirrors DirectInput's exactly.
+			case 8:										// MiSTer pad 1
+				GamcAnalogJoy(pgi, szi, i, 8, nSlide);
+				GamcPlayer(pgi, szi, i, 8);
+				GamcMisc(pgi, szi, i);
+				break;
+			case 9:										// MiSTer pad 2
+				GamcAnalogJoy(pgi, szi, i, 9, nSlide);
+				GamcPlayer(pgi, szi, i, 9);
+				GamcMisc(pgi, szi, i);
+				break;
+#endif
 			default:
 				GamcMisc(pgi, szi, i);
 		}

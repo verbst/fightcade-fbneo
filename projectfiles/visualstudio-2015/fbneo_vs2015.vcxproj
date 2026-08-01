@@ -307,6 +307,30 @@
     <ClInclude Include="..\..\src\dep\libs\zlib\zconf.h" />
     <ClInclude Include="..\..\src\dep\libs\zlib\zlib.h" />
     <ClInclude Include="..\..\src\dep\libs\zlib\zutil.h" />
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_config.h" />
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_modeline.h" />
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_pixels.h" />
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_log.h" />
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_switchres.h" />
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_output.h" />
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_input.h" />
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_internal.h" />
+    <ClInclude Include="..\..\src\dep\groovymister\groovymister.h" />
+    <ClInclude Include="..\..\src\dep\groovymister\nlc_codec.h" />
+    <ClInclude Include="..\..\src\dep\groovymister\rio.h" />
+    <ClInclude Include="..\..\src\dep\groovymister\lz4\lz4.h" />
+    <ClInclude Include="..\..\src\dep\groovymister\lz4\lz4hc.h" />
+    <ClInclude Include="..\..\src\dep\groovymister\lz4\xxhash.h" />
+    <ClInclude Include="..\..\src\dep\switchres\switchres.h" />
+    <ClInclude Include="..\..\src\dep\switchres\switchres_defines.h" />
+    <ClInclude Include="..\..\src\dep\switchres\switchres_wrapper.h" />
+    <ClInclude Include="..\..\src\dep\switchres\monitor.h" />
+    <ClInclude Include="..\..\src\dep\switchres\modeline.h" />
+    <ClInclude Include="..\..\src\dep\switchres\display.h" />
+    <ClInclude Include="..\..\src\dep\switchres\custom_video.h" />
+    <ClInclude Include="..\..\src\dep\switchres\log.h" />
+    <ClInclude Include="..\..\src\dep\switchres\edid.h" />
+    <ClInclude Include="..\..\src\dep\switchres\font.h" />
     <ClInclude Include="..\..\src\intf\audio\aud_dsp.h" />
     <ClInclude Include="..\..\src\intf\audio\lowpass2.h" />
     <ClInclude Include="..\..\src\intf\audio\win32\dsound_core.h" />
@@ -1450,6 +1474,26 @@ del %(Filename).exe
     <ClCompile Include="..\..\src\dep\libs\zlib\trees.c" />
     <ClCompile Include="..\..\src\dep\libs\zlib\uncompr.c" />
     <ClCompile Include="..\..\src\dep\libs\zlib\zutil.c" />
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_config.cpp" />
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_pixels.cpp" />
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_log.cpp" />
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_switchres.cpp" />
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_output.cpp" />
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_input.cpp" />
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_dialog.cpp" />
+    <ClCompile Include="..\..\src\dep\groovymister\groovymister.cpp" />
+    <ClCompile Include="..\..\src\dep\groovymister\nlc_codec.cpp" />
+    <ClCompile Include="..\..\src\dep\groovymister\lz4\lz4.c" />
+    <ClCompile Include="..\..\src\dep\groovymister\lz4\lz4hc.c" />
+    <ClCompile Include="..\..\src\dep\groovymister\lz4\xxhash.c" />
+    <ClCompile Include="..\..\src\dep\switchres\switchres.cpp" />
+    <ClCompile Include="..\..\src\dep\switchres\monitor.cpp" />
+    <ClCompile Include="..\..\src\dep\switchres\modeline.cpp" />
+    <ClCompile Include="..\..\src\dep\switchres\display.cpp" />
+    <ClCompile Include="..\..\src\dep\switchres\custom_video.cpp" />
+    <ClCompile Include="..\..\src\dep\switchres\log.cpp" />
+    <ClCompile Include="..\..\src\dep\switchres\edid.cpp" />
+    <ClCompile Include="..\..\src\dep\switchres\switchres_wrapper.cpp" />
     <CustomBuild Include="..\..\src\dep\scripts\build_details.cpp">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DeploymentContent>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">cd ..
@@ -1484,6 +1528,7 @@ del build_details.exe
     <ClCompile Include="..\..\src\intf\input\inp_interface.cpp" />
     <ClCompile Include="..\..\src\intf\input\win32\dinput_core.cpp" />
     <ClCompile Include="..\..\src\intf\input\win32\inp_dinput.cpp" />
+    <ClCompile Include="..\..\src\intf\input\win32\inp_mister.cpp" />
     <ClCompile Include="..\..\src\intf\interface.cpp" />
     <ClCompile Include="..\..\src\intf\perfcount\prf_interface.cpp" />
     <ClCompile Include="..\..\src\intf\perfcount\win32\prf_performance_counter.cpp" />
@@ -1529,7 +1574,7 @@ del build_details.exe
   <PropertyGroup Label="Globals">
     <ProjectGuid>{86D06C32-A849-4988-A176-A38D014C36C1}</ProjectGuid>
     <RootNamespace>fbneo_vs2015</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
     <ProjectName>fcadefbneo</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -1537,27 +1582,27 @@ del build_details.exe
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -1597,9 +1642,9 @@ del build_details.exe
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>generated;..\..\src\dep\libs\zlib;..\..\src\dep\libs\lib7z;..\..\src\dep\libs\libpng;..\..\src\dep\libs\lua;..\..\src\dep\generated;..\..\src\dep\ggpo\include;..\..\src\burner\win32\resource;..\..\src\burn\drv\taito;..\..\src\burn\drv\misc_post90s;..\..\src\burn\devices;..\..\src\intf\audio\win32;..\..\src\intf\audio;..\..\src\intf\;..\..\src\intf\video\scalers;..\..\src\intf\video\win32;..\..\src\intf\video;..\..\src\intf\perfcount\win32;..\..\src\intf\perfcount;..\..\src\intf\input\win32;..\..\src\intf\input;..\..\src\intf\cd\win32;..\..\src\intf\cd;..\..\src\intf;..\..\src\burner\win32;..\..\src\burn\snd;..\..\src\cpu;..\..\src\burner;..\..\src\burn;..\..\src\cpu\z80;..\..\src\cpu\sh2;..\..\src\cpu\s2650;..\..\src\cpu\nec;..\..\src\cpu\m6809;..\..\src\cpu\m6805;..\..\src\cpu\m6800;..\..\src\cpu\m6502;..\..\src\cpu\m68k;..\..\src\cpu\i8039;..\..\src\cpu\konami;..\..\src\cpu\hd6309;..\..\src\cpu\h6280;..\..\src\cpu\arm7;..\..\src\cpu\arm;..\..\src\cpu\g65816;..\..\src\cpu\spc700;..\..\src\cpu\i8051;..\..\src\cpu\tms32010;..\..\src\cpu\tms34;..\..\src\cpu\i8x41;..\..\src\burn\drv\sega;..\..\src\burn\drv\dataeast;..\..\src\burn\drv\konami;..\..\src\cpu\z180;..\..\src\burn\drv\irem;..\..\src\cpu\upd7810;..\..\src\cpu\v60;..\..\src\cpu\upd7725;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>generated;..\..\src\dep\groovymister;..\..\src\dep\switchres;..\..\src\burner\win32\groovy;..\..\src\dep\libs\zlib;..\..\src\dep\libs\lib7z;..\..\src\dep\libs\libpng;..\..\src\dep\libs\lua;..\..\src\dep\generated;..\..\src\dep\ggpo\include;..\..\src\burner\win32\resource;..\..\src\burn\drv\taito;..\..\src\burn\drv\misc_post90s;..\..\src\burn\devices;..\..\src\intf\audio\win32;..\..\src\intf\audio;..\..\src\intf\;..\..\src\intf\video\scalers;..\..\src\intf\video\win32;..\..\src\intf\video;..\..\src\intf\perfcount\win32;..\..\src\intf\perfcount;..\..\src\intf\input\win32;..\..\src\intf\input;..\..\src\intf\cd\win32;..\..\src\intf\cd;..\..\src\intf;..\..\src\burner\win32;..\..\src\burn\snd;..\..\src\cpu;..\..\src\burner;..\..\src\burn;..\..\src\cpu\z80;..\..\src\cpu\sh2;..\..\src\cpu\s2650;..\..\src\cpu\nec;..\..\src\cpu\m6809;..\..\src\cpu\m6805;..\..\src\cpu\m6800;..\..\src\cpu\m6502;..\..\src\cpu\m68k;..\..\src\cpu\i8039;..\..\src\cpu\konami;..\..\src\cpu\hd6309;..\..\src\cpu\h6280;..\..\src\cpu\arm7;..\..\src\cpu\arm;..\..\src\cpu\g65816;..\..\src\cpu\spc700;..\..\src\cpu\i8051;..\..\src\cpu\tms32010;..\..\src\cpu\tms34;..\..\src\cpu\i8x41;..\..\src\burn\drv\sega;..\..\src\burn\drv\dataeast;..\..\src\burn\drv\konami;..\..\src\cpu\z180;..\..\src\burn\drv\irem;..\..\src\cpu\upd7810;..\..\src\cpu\v60;..\..\src\cpu\upd7725;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>BUILD_WIN32;FASTCALL;_DEBUG;FBNEO_DEBUG;LSB_FIRST;INLINE=__inline static;INCLUDE_AVI_RECORDING;INCLUDE_LIB_PNGH;C_INLINE=__inline;MAME_INLINE=__inline static;_CRT_SECURE_NO_WARNINGS;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SR_CALC_ONLY;SR_WIN32_STATIC;BUILD_WIN32;FASTCALL;_DEBUG;FBNEO_DEBUG;LSB_FIRST;INLINE=__inline static;INCLUDE_AVI_RECORDING;INCLUDE_LIB_PNGH;C_INLINE=__inline;MAME_INLINE=__inline static;_CRT_SECURE_NO_WARNINGS;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
@@ -1627,9 +1672,9 @@ del build_details.exe
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>generated;..\..\src\dep\libs\zlib;..\..\src\dep\libs\lib7z;..\..\src\dep\libs\libpng;..\..\src\dep\generated;..\..\src\dep\ggpo\include;..\..\src\burner\win32\resource;..\..\src\burn\drv\taito;..\..\src\burn\drv\misc_post90s;..\..\src\burn\devices;..\..\src\intf\audio\win32;..\..\src\intf\audio;..\..\src\intf\;..\..\src\intf\video\scalers;..\..\src\intf\video\win32;..\..\src\intf\video;..\..\src\intf\perfcount\win32;..\..\src\intf\perfcount;..\..\src\intf\input\win32;..\..\src\intf\input;..\..\src\intf\cd\win32;..\..\src\intf\cd;..\..\src\intf;..\..\src\burner\win32;..\..\src\burn\snd;..\..\src\cpu;..\..\src\burner;..\..\src\burn;..\..\src\cpu\z80;..\..\src\cpu\sh2;..\..\src\cpu\s2650;..\..\src\cpu\nec;..\..\src\cpu\m6809;..\..\src\cpu\m6805;..\..\src\cpu\m6800;..\..\src\cpu\m6502;..\..\src\cpu\m68k;..\..\src\cpu\i8039;..\..\src\cpu\konami;..\..\src\cpu\hd6309;..\..\src\cpu\h6280;..\..\src\cpu\arm7;..\..\src\cpu\arm;..\..\src\cpu\g65816;..\..\src\cpu\spc700;..\..\src\cpu\i8051;..\..\src\cpu\tms32010;..\..\src\cpu\tms34010;..\..\src\cpu\i8x41;..\..\src\burn\drv\sega;..\..\src\burn\drv\dataeast;..\..\src\burn\drv\konami;..\..\src\cpu\z180;..\..\src\burn\drv\irem;..\..\src\cpu\upd7810;..\..\src\cpu\v60;..\..\src\cpu\upd7725;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>generated;..\..\src\dep\groovymister;..\..\src\dep\switchres;..\..\src\burner\win32\groovy;..\..\src\dep\libs\zlib;..\..\src\dep\libs\lib7z;..\..\src\dep\libs\libpng;..\..\src\dep\generated;..\..\src\dep\ggpo\include;..\..\src\burner\win32\resource;..\..\src\burn\drv\taito;..\..\src\burn\drv\misc_post90s;..\..\src\burn\devices;..\..\src\intf\audio\win32;..\..\src\intf\audio;..\..\src\intf\;..\..\src\intf\video\scalers;..\..\src\intf\video\win32;..\..\src\intf\video;..\..\src\intf\perfcount\win32;..\..\src\intf\perfcount;..\..\src\intf\input\win32;..\..\src\intf\input;..\..\src\intf\cd\win32;..\..\src\intf\cd;..\..\src\intf;..\..\src\burner\win32;..\..\src\burn\snd;..\..\src\cpu;..\..\src\burner;..\..\src\burn;..\..\src\cpu\z80;..\..\src\cpu\sh2;..\..\src\cpu\s2650;..\..\src\cpu\nec;..\..\src\cpu\m6809;..\..\src\cpu\m6805;..\..\src\cpu\m6800;..\..\src\cpu\m6502;..\..\src\cpu\m68k;..\..\src\cpu\i8039;..\..\src\cpu\konami;..\..\src\cpu\hd6309;..\..\src\cpu\h6280;..\..\src\cpu\arm7;..\..\src\cpu\arm;..\..\src\cpu\g65816;..\..\src\cpu\spc700;..\..\src\cpu\i8051;..\..\src\cpu\tms32010;..\..\src\cpu\tms34010;..\..\src\cpu\i8x41;..\..\src\burn\drv\sega;..\..\src\burn\drv\dataeast;..\..\src\burn\drv\konami;..\..\src\cpu\z180;..\..\src\burn\drv\irem;..\..\src\cpu\upd7810;..\..\src\cpu\v60;..\..\src\cpu\upd7725;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>BUILD_WIN32;FASTCALL;_DEBUG;FBNEO_DEBUG;LSB_FIRST;INLINE=__inline static;INCLUDE_LIB_PNGH;C_INLINE=__inline;MAME_INLINE=__inline static;_CRT_SECURE_NO_WARNINGS;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SR_CALC_ONLY;SR_WIN32_STATIC;BUILD_WIN32;FASTCALL;_DEBUG;FBNEO_DEBUG;LSB_FIRST;INLINE=__inline static;INCLUDE_LIB_PNGH;C_INLINE=__inline;MAME_INLINE=__inline static;_CRT_SECURE_NO_WARNINGS;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <OmitFramePointers>false</OmitFramePointers>
     </ClCompile>
     <Link>
@@ -1647,8 +1692,8 @@ del build_details.exe
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>generated;..\..\src\dep\libs\zlib;..\..\src\dep\libs\lib7z;..\..\src\dep\libs\libpng;..\..\src\dep\libs\lua;..\..\src\dep\generated;..\..\src\dep\ggpo\include;..\..\src\burner\win32\resource;..\..\src\burn\drv\taito;..\..\src\burn\drv\misc_post90s;..\..\src\burn\devices;..\..\src\intf\audio\win32;..\..\src\intf\audio;..\..\src\intf\;..\..\src\intf\video\scalers;..\..\src\intf\video\win32;..\..\src\intf\video;..\..\src\intf\perfcount\win32;..\..\src\intf\perfcount;..\..\src\intf\input\win32;..\..\src\intf\input;..\..\src\intf\cd\win32;..\..\src\intf\cd;..\..\src\intf;..\..\src\burner\win32;..\..\src\burn\snd;..\..\src\cpu;..\..\src\burner;..\..\src\burn;..\..\src\cpu\z80;..\..\src\cpu\sh2;..\..\src\cpu\s2650;..\..\src\cpu\nec;..\..\src\cpu\m6809;..\..\src\cpu\m6805;..\..\src\cpu\m6800;..\..\src\cpu\m6502;..\..\src\cpu\m68k;..\..\src\cpu\i8039;..\..\src\cpu\konami;..\..\src\cpu\hd6309;..\..\src\cpu\h6280;..\..\src\cpu\arm7;..\..\src\cpu\arm;..\..\src\cpu\g65816;..\..\src\cpu\spc700;..\..\src\cpu\i8051;..\..\src\cpu\tms32010;..\..\src\cpu\tms34;..\..\src\cpu\i8x41;..\..\src\burn\drv\sega;..\..\src\burn\drv\dataeast;..\..\src\burn\drv\konami;..\..\src\cpu\z180;..\..\src\burn\drv\irem;..\..\src\cpu\upd7810;..\..\src\cpu\v60;..\..\src\cpu\upd7725;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BUILD_WIN32;FASTCALL;LSB_FIRST;INLINE=__inline static;INCLUDE_LIB_PNGH;INCLUDE_AVI_RECORDING;C_INLINE=__inline;MAME_INLINE=__inline static;_CRT_SECURE_NO_WARNINGS;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>generated;..\..\src\dep\groovymister;..\..\src\dep\switchres;..\..\src\burner\win32\groovy;..\..\src\dep\libs\zlib;..\..\src\dep\libs\lib7z;..\..\src\dep\libs\libpng;..\..\src\dep\libs\lua;..\..\src\dep\generated;..\..\src\dep\ggpo\include;..\..\src\burner\win32\resource;..\..\src\burn\drv\taito;..\..\src\burn\drv\misc_post90s;..\..\src\burn\devices;..\..\src\intf\audio\win32;..\..\src\intf\audio;..\..\src\intf\;..\..\src\intf\video\scalers;..\..\src\intf\video\win32;..\..\src\intf\video;..\..\src\intf\perfcount\win32;..\..\src\intf\perfcount;..\..\src\intf\input\win32;..\..\src\intf\input;..\..\src\intf\cd\win32;..\..\src\intf\cd;..\..\src\intf;..\..\src\burner\win32;..\..\src\burn\snd;..\..\src\cpu;..\..\src\burner;..\..\src\burn;..\..\src\cpu\z80;..\..\src\cpu\sh2;..\..\src\cpu\s2650;..\..\src\cpu\nec;..\..\src\cpu\m6809;..\..\src\cpu\m6805;..\..\src\cpu\m6800;..\..\src\cpu\m6502;..\..\src\cpu\m68k;..\..\src\cpu\i8039;..\..\src\cpu\konami;..\..\src\cpu\hd6309;..\..\src\cpu\h6280;..\..\src\cpu\arm7;..\..\src\cpu\arm;..\..\src\cpu\g65816;..\..\src\cpu\spc700;..\..\src\cpu\i8051;..\..\src\cpu\tms32010;..\..\src\cpu\tms34;..\..\src\cpu\i8x41;..\..\src\burn\drv\sega;..\..\src\burn\drv\dataeast;..\..\src\burn\drv\konami;..\..\src\cpu\z180;..\..\src\burn\drv\irem;..\..\src\cpu\upd7810;..\..\src\cpu\v60;..\..\src\cpu\upd7725;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>SR_CALC_ONLY;SR_WIN32_STATIC;BUILD_WIN32;FASTCALL;LSB_FIRST;INLINE=__inline static;INCLUDE_LIB_PNGH;INCLUDE_AVI_RECORDING;C_INLINE=__inline;MAME_INLINE=__inline static;_CRT_SECURE_NO_WARNINGS;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
