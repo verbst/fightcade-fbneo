@@ -8,7 +8,12 @@ bool bInputOkay = false;
 static bool bCinpOkay;
 
 #if defined (BUILD_WIN32)
-	extern struct InputInOut InputInOutDInput;
+	// @groovy: InputInOutMister is a merging shim over InputInOutDInput - it delegates
+	// everything except the two joystick indices reserved for the MiSTer's own pads. It is
+	// used INSTEAD of the DirectInput entry rather than alongside it, because this table has
+	// exactly one usable slot on Win32 (nInputSelect is never persisted) and a second entry
+	// would be unreachable. With MiSTer input disabled it is a pure passthrough.
+	extern struct InputInOut InputInOutMister;
 #elif defined (BUILD_MACOS)
     extern struct InputInOut InputInOutMacOS;
 #elif defined (BUILD_SDL)
@@ -24,7 +29,7 @@ static bool bCinpOkay;
 static struct InputInOut *pInputInOut[]=
 {
 #if defined (BUILD_WIN32)
-	&InputInOutDInput,
+	&InputInOutMister,
 #elif defined (BUILD_MACOS)
     &InputInOutMacOS,
 #elif defined (BUILD_SDL2)

@@ -1,5 +1,6 @@
 // Burner Config file module
 #include "burner.h"
+#include "groovy_config.h"		// Groovy MiSTer settings (persisted below)
 
 #ifdef _UNICODE
  #include <locale.h>
@@ -39,6 +40,11 @@ int ConfigAppLoad()
 #endif
 
 	CreateConfigName(szConfig);
+
+	// @groovy: apply built-in defaults first, so a config file that predates these settings
+	// (or omits some of them) still comes up with a sane, CRT-safe configuration rather than
+	// whatever happened to be in memory.
+	GroovyConfigSetDefaults();
 
 	if ((h = _tfopen(szConfig, _T("rt"))) == NULL) {
 		return 1;
@@ -174,6 +180,30 @@ int ConfigAppLoad()
 
 		// Runahead
 		VAR(nVidRunahead);
+
+		// Groovy MiSTer output
+		VAR(bGroovyEnabled);
+		STR(szGroovyHost);
+		VAR(nGroovyPort);
+		STR(szGroovyPreset);
+		STR(szGroovySwitchresIni);
+		VAR(nGroovyCodec);
+		VAR(nGroovyRgbMode);
+		VAR(nGroovyMtu);
+		VAR(bGroovyCrtSafetyCap);
+		VAR(nGroovyVCountSync);
+		VAR(nGroovyFdMarginNs);
+		VAR(nGroovyAudioMode);
+		VAR(bGroovyUseInputs);
+		VAR(nGroovyInputPort);
+		VAR(bGroovySuppressLocal);
+		VAR(bGroovyAutoReconnect);
+		VAR(nGroovyLogLevel);
+		VAR(bGroovyLogToFile);
+		VAR(bGroovyRotateVertical);
+		VAR(bGroovyFlip180);
+		VAR(nGroovyNlcPack);
+		VAR(nGroovyNearLevel);
 
 		// Sound
 		VAR(nAudSelect);
@@ -540,6 +570,66 @@ int ConfigAppSave()
 	VAR(bVidMuteChat);
 	_ftprintf(h, _T("\n// Run ahead frames (0 = disabled, 1, 2)\n"));
 	VAR(nVidRunahead);
+
+	_ftprintf(h, _T("\n\n\n"));
+	_ftprintf(h, _T("// --- Groovy MiSTer output ---------------------------------------------------\n"));
+	_ftprintf(h, _T("\n// If non-zero, stream video (and optionally audio) to a Groovy MiSTer over UDP\n"));
+	VAR(bGroovyEnabled);
+	_ftprintf(h, _T("\n// MiSTer IP address. A GbE cable is strongly recommended\n"));
+	STR(szGroovyHost);
+	_ftprintf(h, _T("\n// Video/control port (32100)\n"));
+	VAR(nGroovyPort);
+	_ftprintf(h, _T("\n// switchres monitor preset. THE most consequential setting here: it describes what\n"));
+	_ftprintf(h, _T("// your physical CRT can sync, and it is what stands between the stream and a display\n"));
+	_ftprintf(h, _T("// that cannot show it. An unrecognised name is rejected and the default used instead.\n"));
+	_ftprintf(h, _T("// arcade_15_25_31 | arcade_15_31 | arcade_15_25 | arcade_15 | arcade_15ex | arcade_25\n"));
+	_ftprintf(h, _T("// arcade_31 | generic_15 | ntsc | pal | d9800 | d9400 | d9200 | k7000 | k7131 | m3129\n"));
+	_ftprintf(h, _T("// m2929 | h9110 | polo | pstar | ms2930 | ms929 | r666b | pc_31_120 | pc_70_120\n"));
+	_ftprintf(h, _T("// vesa_480 | vesa_600 | vesa_768 | vesa_1024 | custom | lcd  (custom/lcd need an INI)\n"));
+	STR(szGroovyPreset);
+	_ftprintf(h, _T("\n// Optional switchres INI, for timings beyond the built-in presets\n"));
+	STR(szGroovySwitchresIni);
+	_ftprintf(h, _T("\n// Codec: 0 = RAW, 1 = LZ4 (works on every core), 7 = NLC (default, needs an NLC core)\n"));
+	VAR(nGroovyCodec);
+	_ftprintf(h, _T("\n// Pixel format on the wire: 0 = RGB888 (default, renders at 32bpp), 2 = RGB565\n"));
+	VAR(nGroovyRgbMode);
+	_ftprintf(h, _T("\n// MTU: 1500, or 3800 with the core's OSD Jumbo frames option on\n"));
+	VAR(nGroovyMtu);
+	_ftprintf(h, _T("\n// CRT safety cap. Refuses modelines beyond 1024x576, which a fixed-frequency CRT\n"));
+	_ftprintf(h, _T("// should never be asked to sync. Leave this on unless you know your display copes.\n"));
+	VAR(bGroovyCrtSafetyCap);
+	_ftprintf(h, _T("\n// Raster line to sync each blit to. 0 = automatic frame delay (recommended)\n"));
+	VAR(nGroovyVCountSync);
+	_ftprintf(h, _T("\n// Frame-delay safety headroom, in nanoseconds\n"));
+	VAR(nGroovyFdMarginNs);
+	_ftprintf(h, _T("\n// Audio: 0 = PC only, 1 = MiSTer and PC, 2 = MiSTer only (PC silenced)\n"));
+	VAR(nGroovyAudioMode);
+	_ftprintf(h, _T("\n// Use the MiSTer's own pads, as joystick devices 8 and 9. Note this is a cabinet\n"));
+	_ftprintf(h, _T("// convenience, not a latency win: it adds a network hop versus a stick on the PC.\n"));
+	VAR(bGroovyUseInputs);
+	_ftprintf(h, _T("\n// Inputs port (32101)\n"));
+	VAR(nGroovyInputPort);
+	_ftprintf(h, _T("\n// Skip drawing to the PC window (dedicated cabinet). Loses the Fightcade overlay.\n"));
+	VAR(bGroovySuppressLocal);
+	_ftprintf(h, _T("\n// Reconnect automatically after ACK loss. Off by default: every attempt sends\n"));
+	_ftprintf(h, _T("// CMD_CLOSE first, which drops the core's video output.\n"));
+	VAR(bGroovyAutoReconnect);
+	_ftprintf(h, _T("\n// Log verbosity: 0 = errors and handshake, 1 = + telemetry, 2 = full trace\n"));
+	VAR(nGroovyLogLevel);
+	_ftprintf(h, _T("\n// Also write config/groovy.log. Off by default. Events only - never per frame -\n"));
+	_ftprintf(h, _T("// so it stays small; identical repeated lines are collapsed with a count.\n"));
+	VAR(bGroovyLogToFile);
+	_ftprintf(h, _T("\n// Rotate vertical games in software. Off by default: the native scanout is what a\n"));
+	_ftprintf(h, _T("// physically rotated (TATE) cabinet monitor wants, and it is the authentic geometry.\n"));
+	VAR(bGroovyRotateVertical);
+	_ftprintf(h, _T("\n// Honour BDF_ORIENTATION_FLIPPED (cocktail/inverted-monitor games) with a 180 flip\n"));
+	VAR(bGroovyFlip180);
+	_ftprintf(h, _T("\n// NLC entropy pack: 1 = TILED, 2 = Rice (default). Rice needs an rbf_rice_r3 core or\n"));
+	_ftprintf(h, _T("// newer - an older core misparses Rice as TILED and shows GARBAGE with no error.\n"));
+	_ftprintf(h, _T("// If the picture is garbage, set this to 1.\n"));
+	VAR(nGroovyNlcPack);
+	_ftprintf(h, _T("\n// NLC near-lossless level: 0 = lossless (default), 1-3 = progressively lossier\n"));
+	VAR(nGroovyNearLevel);
 
 	_ftprintf(h, _T("\n\n\n"));
 	_ftprintf(h, _T("// --- Sound ------------------------------------------------------------------\n"));

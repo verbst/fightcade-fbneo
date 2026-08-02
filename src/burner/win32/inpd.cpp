@@ -8,6 +8,24 @@ static int bLastValDefined = 0;					//
 
 static HWND hInpdGi = NULL, hInpdPci = NULL, hInpdAnalog = NULL;	// Combo boxes
 
+// Index space of the "PC device" combobox. The index IS nPcDev, and it is persisted in the
+// low nibble of nPlayerDefaultControls, so the order below is load-bearing:
+//
+//    0        keyboard
+//    1 -  3   joysticks 1-3
+//    4 -  7   X-Arcade left/right, HotRod left/right
+//    8 -  9   MiSTer pads 1-2                          @groovy
+//   10 +      preset .ini files scanned from config/presets
+//   0x0F      sentinel meaning "a preset ini is in use" (see UsePreset)
+//
+// Anything past the last built-in is treated as a preset FILENAME, so adding entries here
+// without moving this boundary would make the dialog try to open "MiSTer pad 1.ini".
+#define INPD_LAST_BUILTIN_DEV	9
+
+// Devices that behave like a joystick, i.e. get the "Absolute" analog option. The MiSTer
+// pads belong here: they carry real analog sticks, unlike the X-Arcade/HotRod entries.
+#define INPD_IS_JOYSTICK_DEV(nPci)	(((nPci) >= 1 && (nPci) <= 3) || ((nPci) >= 8 && (nPci) <= 9))
+
 // Update which input is using which PC input
 static int InpdUseUpdate()
 {
@@ -291,6 +309,11 @@ static void InitComboboxes()
 	SendMessage(hInpdPci, CB_ADDSTRING, 0, (LPARAM)FBALoadStringEx(hAppInst, IDS_INPUT_INP_HOTRODL, true));
 	SendMessage(hInpdPci, CB_ADDSTRING, 0, (LPARAM)FBALoadStringEx(hAppInst, IDS_INPUT_INP_HOTRODR, true));
 
+	// @groovy: the MiSTer's own pads, at indices 8 and 9. These MUST stay ahead of the
+	// preset scan below - see INPD_LAST_BUILTIN_DEV.
+	SendMessage(hInpdPci, CB_ADDSTRING, 0, (LPARAM)_T("MiSTer pad 1"));
+	SendMessage(hInpdPci, CB_ADDSTRING, 0, (LPARAM)_T("MiSTer pad 2"));
+
 	// Scan presets directory for .ini files and add them to the list
 	if ((search = FindFirstFile(_T("config/presets/*.ini"), &findData)) != INVALID_HANDLE_VALUE) {
 		do {
@@ -389,6 +412,17 @@ static void GameInpConfigOne(int nPlayer, int nPcDev, int nAnalog, struct GameIn
 		case  7:
 			GamcPlayerHotRod(pgi, szi, nPlayer, 0x01, nAnalog);		// HotRod right size
 			GamcMisc(pgi, szi, -1);
+			break;
+		// @groovy: mirrors GameInpAutoOne() in gami.cpp - keep the two in step.
+		case  8:
+			GamcPlayer(pgi, szi, nPlayer, 8);						// MiSTer pad 1
+			GamcAnalogJoy(pgi, szi, nPlayer, 8, nAnalog);
+			GamcMisc(pgi, szi, nPlayer);
+			break;
+		case  9:
+			GamcPlayer(pgi, szi, nPlayer, 9);						// MiSTer pad 2
+			GamcAnalogJoy(pgi, szi, nPlayer, 9, nAnalog);
+			GamcMisc(pgi, szi, nPlayer);
 			break;
 	}
 }
@@ -574,7 +608,7 @@ static int InitAnalogOptions(int nGi, int nPci)
 	}
 
 	SendMessage(hInpdAnalog, CB_RESETCONTENT, 0, 0);
-	if (nPci >= 1 && nPci <= 3) {
+	if (INPD_IS_JOYSTICK_DEV(nPci)) {
 		// Absolute mode only for joysticks
 		SendMessage(hInpdAnalog, CB_ADDSTRING, 0, (LPARAM)(LPARAM)FBALoadStringEx(hAppInst, IDS_INPUT_ANALOG_ABS, true));
 	} else {
@@ -662,14 +696,14 @@ int UsePreset(bool bMakeDefault)
 	if (nPci == CB_ERR) {
 		return 1;
 	}
-	if (nPci <= 7) {
+	if (nPci <= INPD_LAST_BUILTIN_DEV) {
 		// Determine analog option
 		nAnalog = SendMessage(hInpdAnalog, CB_GETCURSEL, 0, 0);
 		if (nAnalog == CB_ERR) {
 			return 1;
 		}
 
-		if (nPci == 0 || nPci > 3) {				// No "Absolute" option for keyboard or X-Arcade/HotRod controls
+		if (!INPD_IS_JOYSTICK_DEV(nPci)) {			// No "Absolute" option for keyboard or X-Arcade/HotRod controls
 			nAnalog++;
 		}
 
@@ -876,7 +910,10 @@ static INT_PTR CALLBACK DialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lP
 			SendMessage(hInpdPci, CB_SETCURSEL, nPci, 0);
 			EnableWindow(hInpdPci, TRUE);
 
-			if (nPci > 5) {
+			// The MiSTer pads sit above this threshold but do want the analog dropdown, so
+			// test for a joystick rather than for the index alone. 0x0F (preset in use) and
+			// the HotRod entries still fall through to disabled, as before.
+			if (nPci > 5 && !INPD_IS_JOYSTICK_DEV(nPci)) {
 				SendMessage(hInpdAnalog, CB_SETCURSEL, (WPARAM)-1, 0);
 				EnableWindow(hInpdAnalog, FALSE);
 			} else {
@@ -901,7 +938,7 @@ static INT_PTR CALLBACK DialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lP
 				return 0;
 			}
 
-			if (nPci > 7) {
+			if (nPci > INPD_LAST_BUILTIN_DEV) {		// a preset .ini, not a built-in device
 				EnableWindow(GetDlgItem(hInpdDlg, IDC_INPD_DEFAULT), TRUE);
 				EnableWindow(GetDlgItem(hInpdDlg, IDC_INPD_USE), TRUE);
 

@@ -869,6 +869,63 @@ BEGIN
     PUSHBUTTON      "Edit",IDC_BUTTON_LUAEDIT,58,31,46,16
 END
 
+IDD_GROOVYMISTER DIALOGEX 0, 0, 340, 306
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Groovy MiSTer output"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "Enable Groovy MiSTer output",IDC_GM_ENABLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,150,10
+
+    GROUPBOX        "Connection",IDC_STATIC,7,22,326,32
+    LTEXT           "MiSTer IP",IDC_STATIC,14,36,32,8
+    EDITTEXT        IDC_GM_HOST,50,34,90,13,ES_AUTOHSCROLL
+    LTEXT           "A GbE cable is strongly recommended.",IDC_STATIC,148,36,180,8
+
+    GROUPBOX        "Display",IDC_STATIC,7,58,326,64
+    LTEXT           "Monitor preset",IDC_STATIC,14,72,48,8
+    COMBOBOX        IDC_GM_PRESET,66,70,110,120,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Describes what your CRT can sync. Get this wrong and nothing displays.",IDC_STATIC,182,72,146,16
+    LTEXT           "switchres INI",IDC_STATIC,14,90,48,8
+    EDITTEXT        IDC_GM_SRINI,66,88,110,13,ES_AUTOHSCROLL
+    LTEXT           "Optional; required by the custom/lcd presets.",IDC_STATIC,182,90,146,8
+    CONTROL         "CRT safety cap (refuse modes beyond 1024x576)",IDC_GM_CRTCAP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,105,180,10
+    CONTROL         "Rotate vertical games",IDC_GM_ROTATEVERT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,200,105,128,10
+
+    GROUPBOX        "Stream",IDC_STATIC,7,126,326,50
+    LTEXT           "Codec",IDC_STATIC,14,140,22,8
+    COMBOBOX        IDC_GM_CODEC,40,138,74,90,CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "NLC pack",IDC_STATIC,120,140,32,8
+    COMBOBOX        IDC_GM_NLCPACK,154,138,80,90,CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Quality",IDC_STATIC,240,140,26,8
+    COMBOBOX        IDC_GM_NEAR,268,138,60,90,CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Pixels",IDC_STATIC,14,158,22,8
+    COMBOBOX        IDC_GM_RGBMODE,40,156,74,90,CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "MTU",IDC_STATIC,120,158,18,8
+    COMBOBOX        IDC_GM_MTU,154,156,80,90,CBS_DROPDOWNLIST | WS_TABSTOP
+    LTEXT           "Sync line",IDC_STATIC,240,158,32,8
+    EDITTEXT        IDC_GM_VCOUNTSYNC,278,156,50,13,ES_AUTOHSCROLL | ES_NUMBER
+
+    GROUPBOX        "Audio and input",IDC_STATIC,7,180,326,32
+    LTEXT           "Audio",IDC_STATIC,14,194,22,8
+    COMBOBOX        IDC_GM_AUDIO,40,192,96,90,CBS_DROPDOWNLIST | WS_TABSTOP
+    CONTROL         "Use MiSTer pads (joystick 8/9)",IDC_GM_INPUTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,144,194,120,10
+    LTEXT           "Log",IDC_STATIC,268,194,14,8
+    COMBOBOX        IDC_GM_LOGLEVEL,286,192,42,90,CBS_DROPDOWNLIST | WS_TABSTOP
+
+    CONTROL         "Auto-reconnect",IDC_GM_AUTORECONNECT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,216,80,10
+    CONTROL         "Log to file (config/groovy.log)",IDC_GM_LOGFILE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,236,216,97,10
+    CONTROL         "Skip drawing to the PC window",IDC_GM_SUPPRESSLOCAL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,100,216,130,10
+
+    GROUPBOX        "Status",IDC_STATIC,7,230,326,50
+    LTEXT           "",IDC_GM_STATUS,14,240,312,36
+
+    PUSHBUTTON      "Self-test",IDC_GM_SELFTEST,7,285,60,14
+    PUSHBUTTON      "Log...",IDC_GM_LOG,71,285,50,14
+    DEFPUSHBUTTON   "OK",IDOK,175,285,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,229,285,50,14
+    PUSHBUTTON      "Apply",IDC_GM_APPLY,283,285,50,14
+END
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Menu
@@ -1089,6 +1146,8 @@ BEGIN
 		MENUITEM "Enable VSync",													MENU_VIDEOVSYNC
 		MENUITEM "Auto Frameskip",												MENU_AUTOFRAMESKIP
         MENUITEM "Force 60Hz refresh rate",						MENU_FORCE60HZ
+        MENUITEM SEPARATOR
+        MENUITEM "&Groovy MiSTer output...",					MENU_GROOVYMISTER
 		/* @FC
 		MENUITEM "Enable &Triple Buffering (Fullscreen)",		MENU_TRIPLE
         MENUITEM "Enable DWM Sync (Windowed)",                  MENU_DWMFIX

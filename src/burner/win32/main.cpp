@@ -22,6 +22,12 @@
 #include <wininet.h>
 #include <winsock.h>
 
+// Groovy MiSTer. Note this header is deliberately socket-free: groovymister.h pulls in
+// <winsock2.h>, which MSVC will not tolerate in the same translation unit as the Winsock 1.1
+// <winsock.h> above. See src/dep/groovymister/PROVENANCE.md.
+#include "groovy_config.h"		// GroovyConfigApply() after ConfigAppLoad()
+#include "groovy_log.h"			// GroovyTrace() launch breadcrumbs
+
 #if defined (FBNEO_DEBUG)
  bool bDisableDebugConsole = true;
 #endif
@@ -734,6 +740,11 @@ static int AppInit()
 	bEnableIcons = 0; // no driver icons (faster load)
 	bCheatsAllowed = 0; // no cheats
 
+	// @groovy: push the loaded settings into the log module. Done here, right after the
+	// config is final, so file logging is live from startup - the interesting failures happen
+	// during video/driver init, long before a Groovy session exists.
+	GroovyConfigApply();
+
 #if defined (FBNEO_DEBUG)
 	OpenDebugLog();
 #endif
@@ -880,6 +891,15 @@ int ProcessCmdLine()
 	TCHAR *szEnd = szCmdLine + len;
 	TCHAR *szCommand = szCmdLine;
 	TCHAR szOption[MAX_PATH];
+
+	// @groovy diagnostic: how was this instance actually launched? Fightcade's argv decides
+	// which startup path runs, and a savestate launch takes a completely different route
+	// through ggpo_begin_game_callback than a cold one. One line, at startup.
+	{
+		char szAnsi[512];
+		TCHARToANSI(szCmdLine, szAnsi, sizeof(szAnsi));
+		GroovyTrace("launch: cmdline [%s]", szAnsi);
+	}
 
 	while (szCommand < szEnd) {
 		INT32 size = 0;

@@ -118,6 +118,8 @@ cave_sprite_func.h = $(srcdir)dep/generated/cave_sprite_func.h
 psikyo_tile_func.h = $(srcdir)dep/generated/psikyo_tile_func.h
 pgm_sprite.h = $(srcdir)dep/generated/pgm_sprite.h
 build_details.h = $(srcdir)dep/generated/build_details.h
+detector_buffers.h = $(srcdir)dep/generated/detector_buffers.h
+detector_loaders.h = $(srcdir)dep/generated/detector_loaders.h
 
 allobj	= $(objdir)cpu/m68k/m68kcpu.o $(objdir)cpu/m68k/m68kops.o \
 	  $(foreach file,$(autobj:.o=.c), \
@@ -475,6 +477,29 @@ $(objdir)cpu/m68k/m68kmake.exe: $(srcdir)cpu/m68k/m68kmake.c
 	@echo Compiling Musashi MC680x0 core \(m68kmake.c\)...
 	@$(CC) $(CFLAGS) $(srcdir)cpu/m68k/m68kmake.c -o $(objdir)cpu/m68k/m68kmake.exe
 
+
+#
+#	Extra rules for the baked-in game detectors, needed by vid_detector.cpp
+#
+#	Without these the detector table is empty and every round counter and ranked match
+#	report silently stops working - vid_detector.cpp #errors rather than let that ship.
+#	FBNEO_DETECTORS must point at a clone of fightcadeorg/fightcade-detectors.
+#
+#	NOTE: unlike the VS build (which writes to the gitignored projectfiles generated dir),
+#	this follows the convention of every other generated header here and writes into
+#	$(srcdir)dep/generated, where the tracked placeholder files live - so a mingw build
+#	will show those two files as modified. See docs/DETECTORS.md.
+#
+
+FBNEO_DETECTORS ?= ../fightcade-detectors
+
+vid_detector.d vid_detector.o: $(detector_buffers.h) $(detector_loaders.h)
+
+$(detector_buffers.h) $(detector_loaders.h): $(srcdir)dep/scripts/detectors.pl
+ifdef	PERL
+	@echo Generating game detectors...
+	@$(srcdir)dep/scripts/detectors.pl -o $(srcdir)dep/generated $(FBNEO_DETECTORS)
+endif
 
 #
 #	Extra rules for generated header file cvt.h, needed by ctv.cpp

@@ -446,6 +446,9 @@ void QuarkInit(TCHAR *connect);
 void QuarkEnd();
 void QuarkTogglePerfMon();
 void QuarkRunIdle(int ms);
+UINT32 QuarkTakeIdleCount();	// @groovy diagnostic: ggpo_idle calls since the last read, then resets
+extern int nRollbackFrames;		// running totals, reported alongside the Groovy frame-cost line
+extern int nRollbackCount;
 bool QuarkGetInput(void *values, int size, int players);
 bool QuarkIncrementFrame();
 void QuarkSendChatText(char *text);

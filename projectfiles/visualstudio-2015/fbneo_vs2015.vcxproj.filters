@@ -946,7 +946,91 @@
     <ClInclude Include="..\..\src\cpu\tms34_intf.h">
       <Filter>cpus</Filter>
     </ClInclude>
-  </ItemGroup>
+          <ClInclude Include="..\..\src\dep\groovymister\groovymister.h">
+      <Filter>dep\groovymister</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\groovymister\nlc_codec.h">
+      <Filter>dep\groovymister</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\groovymister\rio.h">
+      <Filter>dep\groovymister</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\groovymister\lz4\lz4.h">
+      <Filter>dep\groovymister\lz4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\groovymister\lz4\lz4hc.h">
+      <Filter>dep\groovymister\lz4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\groovymister\lz4\xxhash.h">
+      <Filter>dep\groovymister\lz4</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\switchres\switchres.h">
+      <Filter>dep\switchres</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\switchres\switchres_defines.h">
+      <Filter>dep\switchres</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\switchres\switchres_wrapper.h">
+      <Filter>dep\switchres</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\switchres\monitor.h">
+      <Filter>dep\switchres</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\switchres\modeline.h">
+      <Filter>dep\switchres</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\switchres\display.h">
+      <Filter>dep\switchres</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\switchres\custom_video.h">
+      <Filter>dep\switchres</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\switchres\log.h">
+      <Filter>dep\switchres</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\switchres\edid.h">
+      <Filter>dep\switchres</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\dep\switchres\font.h">
+      <Filter>dep\switchres</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_config.h">
+      <Filter>burner\win32\groovy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_modeline.h">
+      <Filter>burner\win32\groovy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_pixels.h">
+      <Filter>burner\win32\groovy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_log.h">
+      <Filter>burner\win32\groovy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_switchres.h">
+      <Filter>burner\win32\groovy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_output.h">
+      <Filter>burner\win32\groovy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_input.h">
+      <Filter>burner\win32\groovy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\burner\win32\groovy\groovy_internal.h">
+      <Filter>burner\win32\groovy</Filter>
+    </ClInclude>
+<Filter Include="dep\groovymister">
+      <UniqueIdentifier>{6856bc68-208c-4584-9ddc-98ebf1eec367}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dep\groovymister\lz4">
+      <UniqueIdentifier>{5ad6983e-11e4-4025-b978-408505315e1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dep\switchres">
+      <UniqueIdentifier>{21375daf-0cf1-484a-8b0c-414ecf9d2ac9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="burner\win32\groovy">
+      <UniqueIdentifier>{d8d3315a-4dbd-40c3-8a3c-2ae7641f7a28}</UniqueIdentifier>
+    </Filter>
+</ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\burn\burn.cpp">
       <Filter>Burn</Filter>
@@ -4230,7 +4314,70 @@
     <ClCompile Include="..\..\src\burn\drv\sega\d_segac2.cpp">
       <Filter>Burn\drv\sega</Filter>
     </ClCompile>
-  </ItemGroup>
+      <ClCompile Include="..\..\src\dep\groovymister\groovymister.cpp">
+      <Filter>dep\groovymister</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\groovymister\nlc_codec.cpp">
+      <Filter>dep\groovymister</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\groovymister\lz4\lz4.c">
+      <Filter>dep\groovymister\lz4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\groovymister\lz4\lz4hc.c">
+      <Filter>dep\groovymister\lz4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\groovymister\lz4\xxhash.c">
+      <Filter>dep\groovymister\lz4</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\switchres\switchres.cpp">
+      <Filter>dep\switchres</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\switchres\monitor.cpp">
+      <Filter>dep\switchres</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\switchres\modeline.cpp">
+      <Filter>dep\switchres</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\switchres\display.cpp">
+      <Filter>dep\switchres</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\switchres\custom_video.cpp">
+      <Filter>dep\switchres</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\switchres\log.cpp">
+      <Filter>dep\switchres</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\switchres\edid.cpp">
+      <Filter>dep\switchres</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\dep\switchres\switchres_wrapper.cpp">
+      <Filter>dep\switchres</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_config.cpp">
+      <Filter>burner\win32\groovy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_pixels.cpp">
+      <Filter>burner\win32\groovy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_log.cpp">
+      <Filter>burner\win32\groovy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_switchres.cpp">
+      <Filter>burner\win32\groovy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_output.cpp">
+      <Filter>burner\win32\groovy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_input.cpp">
+      <Filter>burner\win32\groovy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\intf\input\win32\inp_mister.cpp">
+      <Filter>interfaces\input\win32</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\burner\win32\groovy\groovy_dialog.cpp">
+      <Filter>burner\win32\groovy</Filter>
+    </ClCompile>
+</ItemGroup>
   <ItemGroup>
     <Filter Include="Burn">
       <UniqueIdentifier>{20c66404-b041-4c1c-92d5-e247bed49381}</UniqueIdentifier>

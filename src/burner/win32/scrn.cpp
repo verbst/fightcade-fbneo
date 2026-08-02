@@ -1,10 +1,17 @@
 // Screen Window
 #include "burner.h"
 #include "luaengine.h"
+#include "groovy_output.h"		// Groovy MiSTer settings dialog (MENU_GROOVYMISTER)
 #include <shlobj.h>
 
 #define		HORIZONTAL_ORIENTED_RES		0
 #define		VERTICAL_ORIENTED_RES			1
+
+// @groovy: idle keepalive tick. 250ms against the keepalive's own 2000ms threshold - the poll must
+// be the faster of the two, or a tick landing just under the threshold defers the send by a whole
+// period and roughly doubles the worst-case silence. See GroovyKeepAlive().
+#define		GROOVY_KEEPALIVE_TIMER_ID	0x47524B41	// 'GRKA'
+#define		GROOVY_KEEPALIVE_TICK_MS	250
 
 int nActiveGame;
 
@@ -322,6 +329,15 @@ static LRESULT CALLBACK ScrnProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPar
 		HANDLE_MSG(hWnd, WM_ENTERSIZEMOVE, OnEnterSizeMove);
 		HANDLE_MSG(hWnd, WM_EXITSIZEMOVE, OnExitSizeMove);
 		HANDLE_MSG(hWnd, WM_ENTERIDLE, OnEnterIdle);
+
+		// @groovy: hold an idle MiSTer session open. Handled inline rather than via HANDLE_MSG
+		// because the macro's OnTimer signature would need a stub for a one-line body.
+		case WM_TIMER:
+			if (wParam == GROOVY_KEEPALIVE_TIMER_ID) {
+				GroovyKeepAlive();
+				return 0;
+			}
+			break;
 
 		HANDLE_MSG(hWnd, WM_MOUSEMOVE, OnMouseMove);
 		HANDLE_MSG(hWnd, WM_LBUTTONUP, OnLButtonUp);
@@ -1682,6 +1698,10 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 
 		case MENU_AUTOFRAMESKIP:
 			bAlwaysDrawFrames = !bAlwaysDrawFrames;
+			break;
+
+		case MENU_GROOVYMISTER:
+			GroovyDialogCreate();
 			break;
 
 		case MENU_AUD_PLUGIN_1:
@@ -3448,6 +3468,19 @@ int ScrnInit()
 		ScrnSize();
 	}
 
+	// @groovy: the only thing that still runs when the frame loop does not.
+	//
+	// The MiSTer core drops a session that sends nothing for a few seconds and frees the CRT.
+	// Offline that fires the moment a menu opens: OnEnterIdle() below only pumps RunIdle() when
+	// kNetGame, so a Win32 menu or a modal dialog stops everything we would otherwise send.
+	// WM_TIMER is delivered inside both of those modal loops, which is exactly why it is used here.
+	//
+	// Always on and not tied to the session: GroovyKeepAlive() no-ops unless a session is open AND
+	// nothing has gone on the wire recently, so this costs a message and a comparison. The rate is
+	// deliberately faster than the keepalive's own threshold - polling at the threshold would let a
+	// tick land just under it and defer the send by a whole extra period.
+	SetTimer(hScrnWnd, GROOVY_KEEPALIVE_TIMER_ID, GROOVY_KEEPALIVE_TICK_MS, NULL);
+
 	return 0;
 }
 
@@ -3463,6 +3496,7 @@ int ScrnExit()
 	}
 
 	if (hScrnWnd) {
+		KillTimer(hScrnWnd, GROOVY_KEEPALIVE_TIMER_ID);		// @groovy keepalive tick
 		DestroyWindow(hScrnWnd);
 		hScrnWnd = NULL;
 	}

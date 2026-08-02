@@ -1,4 +1,5 @@
 ﻿#include "burner.h"
+#include "groovy_log.h"	// @groovy diagnostic breadcrumbs (logging only - no behaviour change)
 #include "ggponet.h"
 #include "ggpoclient.h"
 #include "ggpo_perfmon.h"
@@ -147,12 +148,32 @@ bool __cdecl ggpo_on_client_game_callback(GGPOClientEvent *info)
 
 bool __cdecl ggpo_on_event_callback(GGPOEvent *info)
 {
+	// @groovy diagnostic: the session lifecycle, logged BEFORE the client-event forward so
+	// the Fightcade client codes (5000+: connecting / connected / matchinfo / chat) are
+	// visible too. Those are what tell us the SERVER side is fine; the 1000-series codes are
+	// the peer-to-peer session. If the 1000s never appear, the match never synchronised and
+	// nothing downstream - including Groovy - was ever going to happen.
+	GroovyTrace("ggpo: event %d%s", (int)info->code,
+	            info->code == GGPO_EVENTCODE_CONNECTED_TO_PEER       ? " CONNECTED_TO_PEER" :
+	            info->code == GGPO_EVENTCODE_SYNCHRONIZING_WITH_PEER ? " SYNCHRONIZING" :
+	            info->code == GGPO_EVENTCODE_RUNNING                 ? " RUNNING" :
+	            info->code == GGPO_EVENTCODE_DISCONNECTED_FROM_PEER  ? " DISCONNECTED" :
+	            info->code == GGPO_EVENTCODE_TIMESYNC                ? " TIMESYNC" :
+	            info->code >= 5000                                   ? " (fightcade client event)" : "");
+
 	if (ggpo_is_client_eventcode(info->code)) {
 		return ggpo_on_client_event_callback((GGPOClientEvent *)info);
 	}
 	if (ggpo_is_client_gameevent(info->code)) {
 		return ggpo_on_client_game_callback((GGPOClientEvent *)info);
 	}
+	GroovyTrace("ggpo: peer event %d%s", (int)info->code,
+	            info->code == GGPO_EVENTCODE_CONNECTED_TO_PEER       ? " CONNECTED_TO_PEER" :
+	            info->code == GGPO_EVENTCODE_SYNCHRONIZING_WITH_PEER ? " SYNCHRONIZING" :
+	            info->code == GGPO_EVENTCODE_RUNNING                 ? " RUNNING" :
+	            info->code == GGPO_EVENTCODE_DISCONNECTED_FROM_PEER  ? " DISCONNECTED" :
+	            info->code == GGPO_EVENTCODE_TIMESYNC                ? " TIMESYNC" : "");
+
 	switch (info->code) {
 	case GGPO_EVENTCODE_CONNECTED_TO_PEER:
 		VidOverlaySetSystemMessage(_T("Connected to Peer"));
@@ -204,6 +225,13 @@ bool __cdecl ggpo_begin_game_callback(char *name)
 	ANSIToTCHAR(name, tname, MAX_PATH);
 	SetBurnFPS(name, kNetVersion);
 
+	// @groovy diagnostic. This callback has three exits and they load the driver in totally
+	// different ways: a savestate launch goes through BurnStateLoad + DrvInitCallback and
+	// never touches MediaInit, while a cold launch does MediaInit() then DrvInit(). Knowing
+	// which one ran is the difference between guessing and not.
+	GroovyTrace("ggpo: begin_game '%s' spectator=%d ranked=%d fps=%d", name,
+	            (int)kNetSpectator, (int)iRanked, (int)nBurnFPS);
+
 	if (!kNetSpectator)
 	{
 		// ranked savestate
@@ -211,7 +239,9 @@ bool __cdecl ggpo_begin_game_callback(char *name)
 			_stprintf(tfilename, _T("savestates\\%s_fbneo_ranked.fs"), tname);
 			if (FindFirstFile(tfilename, &fd) != INVALID_HANDLE_VALUE) {
 				// Load our save-state file (freeplay, event mode, etc.)
+				GroovyTrace("ggpo: path=RANKED SAVESTATE, loading state (driver comes up via DrvInitCallback)");
 				BurnStateLoad(tfilename, 1, &DrvInitCallback);
+				GroovyTrace("ggpo: ranked savestate loaded, bDrvOkay=%d bVidOkay=%d", (int)bDrvOkay, (int)bVidOkay);
 				DetectorLoad(name, false, iSeed);
 				// if playing a direct game, we never get match information, so put anonymous
 				if (bDirect) {
@@ -226,7 +256,9 @@ bool __cdecl ggpo_begin_game_callback(char *name)
 		_stprintf(tfilename, _T("savestates\\%s_fbneo.fs"), tname);
 		if (FindFirstFile(tfilename, &fd) != INVALID_HANDLE_VALUE) {
 			// Load our save-state file (freeplay, event mode, etc.)
+			GroovyTrace("ggpo: path=SAVESTATE, loading state (driver comes up via DrvInitCallback)");
 			BurnStateLoad(tfilename, 1, &DrvInitCallback);
+			GroovyTrace("ggpo: savestate loaded, bDrvOkay=%d bVidOkay=%d", (int)bDrvOkay, (int)bVidOkay);
 			DetectorLoad(name, false, iSeed);
 			// if playing a direct game, we never get match information, so put anonymous
 			if (bDirect) {
@@ -243,8 +275,11 @@ bool __cdecl ggpo_begin_game_callback(char *name)
 		nBurnDrvActive = i;
 		if ((_tcscmp(BurnDrvGetText(DRV_NAME), tname) == 0) && (!(BurnDrvGetFlags() & BDF_BOARDROM))) {
 			if (!kNetSpectator) {
+				GroovyTrace("ggpo: path=COLD LOAD, MediaInit() then DrvInit()");
 				MediaInit();
+				GroovyTrace("ggpo: MediaInit done, bVidOkay=%d", (int)bVidOkay);
 				DrvInit(i, true);
+				GroovyTrace("ggpo: DrvInit done, bDrvOkay=%d bVidOkay=%d", (int)bDrvOkay, (int)bVidOkay);
 			} else {
 				bDelayLoad = true;
 			}
@@ -489,6 +524,7 @@ void QuarkInit(TCHAR *tconnect)
 	int player = 0;
 	int localPort, remotePort;
 
+	GroovyTrace("ggpo: QuarkInit [%s]", TCHARToANSI(tconnect, NULL, 0));
 	kNetVersion = NET_VERSION;
 	kNetGame = 1;
 	kNetLua = 0;
@@ -612,11 +648,13 @@ void QuarkInit(TCHAR *tconnect)
 
 void QuarkEnd()
 {
+	GroovyTrace("ggpo: QuarkEnd - match over");
+
 	ConfigGameSave(bSaveInputs);
+
 	ggpo_close_session(ggpo);
 	kNetGame = 0;
 	bMediaExit = true;
-
 }
 
 void QuarkTogglePerfMon()
@@ -628,9 +666,54 @@ void QuarkTogglePerfMon()
 	ggpoutil_perfmon_toggle();
 }
 
+// @groovy diagnostic: how often GGPO actually gets idled.
+//
+// run.cpp:437-451 guarantees ONE call per displayed frame (via nRunQuark) and grants further calls
+// only while nAccTime < nFps - so this counter is a direct measure of how much slack the frame loop
+// had. It is the other half of the "sync overhead" figure in the Groovy frame-cost line: the
+// client's WaitSync busy-spins whatever this loop did not spend, so high spin should coincide with
+// a HIGH idle count (plenty of slack, GGPO not the bottleneck) and low spin with a low one.
+// Read and reset by GroovyGetGgpoIdleCount().
+static UINT32 nGgpoIdleCalls = 0;
+
+UINT32 QuarkTakeIdleCount()
+{
+	const UINT32 n = nGgpoIdleCalls;
+	nGgpoIdleCalls = 0;
+	return n;
+}
+
 void QuarkRunIdle(int ms)
 {
+	nGgpoIdleCalls++;
 	ggpo_idle(ggpo, ms);
+
+	// @groovy diagnostic: a heartbeat while the session is not producing frames.
+	//
+	// If ggpo_synchronize_input keeps failing we get no frames, no events and no clue
+	// whether the peer is even reachable. Every 5 SECONDS - not per frame - report what GGPO
+	// itself thinks: a moving ping or non-zero queues means packets are flowing and the
+	// session is simply not synchronising; a dead ping means the peer was never reached.
+	static UINT32 nLastBeatMs = 0;
+	static UINT32 nLastFrames = 0;
+	const UINT32 nNow = (UINT32)timeGetTime();
+
+	if (nLastBeatMs == 0) nLastBeatMs = nNow;
+	if ((nNow - nLastBeatMs) >= 5000) {
+		if (nFramesEmulated == nLastFrames) {		// nothing advanced in the last 5s
+			GGPONetworkStats st;
+			memset(&st, 0, sizeof(st));
+			ggpo_get_stats(ggpo, &st);
+			GroovyTrace("ggpo: NO FRAMES for 5s - ping=%d kbps=%d sendQ=%d recvQ=%d predictQ=%d "
+			            "localBehind=%d remoteBehind=%d",
+			            st.network.ping, st.network.kbps_sent,
+			            st.network.send_queue_len, st.network.recv_queue_len,
+			            st.network.predict_queue_len,
+			            st.timesync.local_frames_behind, st.timesync.remote_frames_behind);
+		}
+		nLastFrames = nFramesEmulated;
+		nLastBeatMs = nNow;
+	}
 }
 
 bool QuarkGetInput(void *values, int size, int players)
