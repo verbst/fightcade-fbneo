@@ -127,32 +127,37 @@ static bool   bSessionDead    = false;
 // healthy session.
 #define GROOVY_BAD_ECHOS 5
 
-// *** The reconnect freeze, and why we reset the client's own state. ***
+// *** The reconnect freeze - fixed upstream at the root; this now only resets OUR counter. ***
 //
-// CmdInit re-zeroes NONE of the client's 29 session-scoped fields - they are initialised in the
-// GroovyMister constructor only (groovymister.cpp:108-111, :155). Four of them drive the raster
-// servo: fpga.frame, fpga.frameEcho, fpga.vCount, fpga.vCountEcho. They therefore survive every
-// reconnect, ours and the client's internal one alike.
+// Originally: CmdInit re-zeroed NONE of the client's session-scoped fields - they were
+// initialised in the GroovyMister constructor only, so four fields driving the raster servo
+// (fpga.frame, fpga.frameEcho, fpga.vCount, fpga.vCountEcho) survived every reconnect, ours and
+// the client's internal one alike. That hard-locked FBNeo on a cable-pull: SessionOpen()
+// correctly reset nBlitFrame to 0, but the resync in GroovyFrameReady() immediately adopted the
+// DEAD session's fpga.frame (5472), so we blitted frame 5473 into a core whose counter had
+// restarted at ~1 - DiffTimeRaster() computed a spread of 5472, and
+// diffTime = m_widthTime(640) * dif = 4.59e8 ticks, 46 SECONDS of busy-spin inside WaitSync per
+// echo change, accumulating. Hence the force-kill. (m_frameTime = m_widthTime * vTotal, so the
+// implied spin is generally (m_frameTime * spread) / 2 - half a frame period per frame of
+// divergence. Normal operation is a spread of 1.)
 //
-// That is what hard-locked FBNeo on a cable-pull. SessionOpen() correctly resets nBlitFrame to 0,
-// but the resync in GroovyFrameReady() immediately adopted the DEAD session's fpga.frame (5472),
-// so we blitted frame 5473 into a core whose counter had restarted at ~1. DiffTimeRaster() then
-// computed vCount1 = 5472*262 against vCount2 = 262, dif = 716635, and
-// diffTime = m_widthTime(640) * dif = 4.59e8 ticks - 46 SECONDS of busy-spin inside WaitSync, per
-// echo change, accumulating. Hence the force-kill.
-//
-// Generally: m_frameTime = m_widthTime * vTotal (groovymister.cpp:845-846), so the implied spin is
-// (m_frameTime * spread) / 2 - half a frame period for every frame of divergence between frameEcho
-// and frame. Normal operation is a spread of 1.
-//
-// fpga is public, so we can do exactly what the constructor does. Call this on every session start.
-// Defined below, once nBlitFrame exists.
+// Fixed upstream (docs/UPSTREAM_REPORT_groovymister_reconnect_state.md -> the vendored client's
+// resetSessionState(), called unconditionally at the top of every CmdInit): fpga.* can no longer
+// carry a dead session's counters across a reconnect, ours or the client's internal one. This
+// function now exists only to reset OUR OWN nBlitFrame - the library has no notion of it, so
+// nothing upstream can do that part for us. Call this on every session start and on every
+// observed internal reconnect (reconnectEpoch() change).
 static void ResetClientFrameState();
 
 // Above this many frames of (frameEcho - frame), refuse to hand the state to WaitSync at all: the
 // implied sleep is spread/2 frame periods, so 8 caps it at ~4 (67ms at 60Hz) instead of 46 seconds.
 // A legitimate lead is 1, occasionally 2 with frame delay - we run one frame ahead of the display,
 // never thousands.
+//
+// The vendored DiffTimeRaster() now carries the identical clamp internally (same threshold, same
+// reasoning - it was our suggestion, absorbed upstream). This copy stays as defense-in-depth and,
+// more importantly, diagnostics: see the comment at its call site in GroovyWaitSync() for why our
+// copy is the one that actually reaches a support log.
 #define GROOVY_RASTER_MAX_SPREAD 8
 
 static bool   bSwitchresUp  = false;
@@ -160,13 +165,11 @@ static bool   bHaveModeline = false;
 static Modeline curModeline;
 static UINT32 nBlitFrame    = 0;
 
+// The library zeroes its own fpga.* on every CmdInit now (resetSessionState(), see above) - this
+// only has to reset the counter it doesn't know about.
 static void ResetClientFrameState()
 {
-	gm.fpga.frame      = 0;
-	gm.fpga.frameEcho  = 0;
-	gm.fpga.vCount     = 0;
-	gm.fpga.vCountEcho = 0;
-	nBlitFrame         = 0;
+	nBlitFrame = 0;
 }
 
 // Session parameters are baked into CMD_INIT and cannot change mid-session: a codec, RGB
@@ -626,10 +629,11 @@ static bool SessionOpen()
 // POSIX, where the same socket is plain and unconnected, which is exactly why the loopback rig
 // could never have caught it.
 //
-// The same reasoning applies to the keepalive, plus one of its own: the upstream CmdSendKeepAlive()
-// (absent from our vendored copy) also uses the RIO send path, and a keepalive by definition fires
-// when we are NOT blitting - which is exactly when nothing is draining the send completion queue.
-// Undrained completions would eventually make RIOSend fail silently. Our own socket has no queue.
+// The same reasoning applies to the keepalive, plus one of its own: the vendored CmdSendKeepAlive()
+// (added upstream in the same pull as the CmdSwitchres ACK fix - not adopted here) also uses the
+// RIO send path, and a keepalive by definition fires when we are NOT blitting - which is exactly
+// when nothing is draining the send completion queue. Undrained completions would eventually make
+// RIOSend fail silently over a long enough idle stretch. Our own socket has no queue.
 //
 // A fresh socket sidesteps all of it: not RIO-registered, not connected, nothing being deregistered
 // underneath it, and blocking - so sendto returns only once the stack owns the datagram. Winsock
@@ -1041,8 +1045,23 @@ void GroovyFrameReady()
 	// on it. Re-sending an identical one costs a core-side mode reset, so only on change.
 	if (!bHaveModeline || !curModeline.SameSignal(dec.modeline)) {
 		const Modeline& m = dec.modeline;
-		gm.CmdSwitchres(m.pclock, m.hActive, m.hBegin, m.hEnd, m.hTotal,
-		                m.vActive, m.vBegin, m.vEnd, m.vTotal, m.interlace);
+
+		// CmdSwitchres now ACKs and retries internally (up to 3x getACK(60), mirroring
+		// CmdInit) - see docs/CMDSWITCHRES_RECONNECT_HANDOFF.md. A non-zero return means the
+		// ACK never landed: the core's modeline state is unconfirmed, so leaving bHaveModeline
+		// set here would blit into a session that may be silently discarding every frame for
+		// the rest of its life (the exact bug the handoff fixed). Treat it like CheckSessionAlive()
+		// treats a dead session - close and let the normal back-off (SessionRetryDue()) retry -
+		// rather than "try again next frame".
+		if (gm.CmdSwitchres(m.pclock, m.hActive, m.hBegin, m.hEnd, m.hTotal,
+		                     m.vActive, m.vBegin, m.vEnd, m.vTotal, m.interlace) != 0) {
+			GroovyLogAlways("CmdSwitchres FAILED (no ACK after retry) for %dx%d %.3fMHz - "
+			                "reconnecting", m.hActive, m.vActive, m.pclock);
+			SessionClose("switchres ACK failed");
+			NoteConnectFailed();
+			return;
+		}
+
 		curModeline   = m;
 		bHaveModeline = true;
 		GroovyLog(GROOVY_LOG_ERROR, "CmdSwitchres %dx%d %.3fMHz hfreq %.2fkHz interlace %d",
@@ -1073,12 +1092,13 @@ void GroovyFrameReady()
 	// The core displays frames in counter order and discards anything behind its current
 	// one, so resync if it has moved past us.
 	//
-	// BOUNDED, and that bound is the whole reconnect-freeze fix. "The core moved past us" is a
-	// one- or two-frame condition. A lead of thousands is never a resync - it is the previous
-	// session's counter, which CmdInit does not clear (see ResetClientFrameState). Adopting it
-	// blitted frame 5473 at a core that had restarted at 1 and spun WaitSync for 46 seconds.
-	// H1 already zeroes fpga.frame on every session start; this is the belt to that pair of braces,
-	// covering any reconnect path that reaches here before we noticed it.
+	// BOUNDED. "The core moved past us" is a one- or two-frame condition; a lead of thousands
+	// was never a resync - it was the previous session's counter. That used to be reachable
+	// (CmdInit didn't clear it - the original reconnect-freeze bug: adopting frame 5473 at a
+	// core that had restarted at 1 spun WaitSync for 46 seconds), and is now fixed at the root
+	// in the vendored client (resetSessionState(), called at the top of every CmdInit - see the
+	// comment above ResetClientFrameState()). This bound stays as defense-in-depth: still cheap,
+	// still correct, and it means a lead can only ever mean the small, legitimate case.
 	if (gm.fpga.frame > nBlitFrame && gm.fpga.frame - nBlitFrame <= GROOVY_RASTER_MAX_SPREAD) {
 		nBlitFrame = gm.fpga.frame;
 	}
@@ -1161,21 +1181,28 @@ void GroovyWaitSync()
 	// the attribution has to describe the call we are about to make.
 	const bool bPacing = GroovyPacingActive();
 
-	// *** The backstop. Nothing below this line may spin for seconds. ***
+	// *** Nothing below this line may spin for seconds. ***
 	//
 	// WaitSync's sleep is driven by DiffTimeRaster(), which computes
 	// dif = ((frameEcho-1)*vTotal + vCountEcho - frame*vTotal - vCount) / 2 and multiplies by
 	// m_widthTime. Since m_frameTime = m_widthTime * vTotal, the implied sleep is
 	// (m_frameTime * spread) / 2 - half a frame period per frame of divergence. A spread of 5472
 	// (the cable-pull reconnect) is 46 SECONDS of busy-spin, and WaitSync accumulates it across
-	// iterations, so it never returns. That is a force-kill, and it is what happened on hardware.
+	// iterations, so it never returns. That is a force-kill, and it is what happened on hardware
+	// before the root cause was fixed (see ResetClientFrameState()'s comment).
 	//
 	// Only the positive direction spins: a negative dif clamps sleepTime to 0 and falls straight
 	// through. So one comparison is enough.
 	//
-	// H1 and H2 stop the known cause. This stops the CLASS of cause - whatever desynchronises those
-	// two counters, we skip pacing for one frame rather than hang the emulator. One frame of
-	// imperfect pacing against a 46-second lock is not a difficult trade.
+	// The vendored DiffTimeRaster() now carries an identical clamp internally (same threshold, 8 -
+	// our own suggestion, absorbed upstream), so this is no longer the only thing standing between
+	// a desync and a hang. It stays because it is also the diagnostic: the library's equivalent is
+	// a verbosity-2, per-frame LOG() call, and SessionOpen() caps client verbosity at 1 whenever
+	// file logging is on (level 2 would flood it) - so the library's own report of this condition
+	// is invisible in exactly the logs a user would send us. This one is GROOVY_LOG_ERROR/on-change,
+	// so it survives. Whatever desynchronises those two counters, we skip pacing for one frame
+	// rather than hang the emulator - one frame of imperfect pacing against a 46-second lock is not
+	// a difficult trade, even now that it should never trigger in practice.
 	const UINT32 nEcho = gm.fpga.frameEcho, nCoreFrame = gm.fpga.frame;
 	if (nEcho > nCoreFrame && nEcho - nCoreFrame > GROOVY_RASTER_MAX_SPREAD) {
 		GroovyLogOnChange(GROOVY_LOG_ERROR, GROOVY_LOGKEY_RASTERSPREAD,

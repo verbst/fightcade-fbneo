@@ -10,13 +10,33 @@ Consumed from `src/burner/win32/groovy/`. We link the C++ class (`GroovyMister`)
 | | |
 |---|---|
 | Upstream project | `Groovy_MiSTer`, branch `proto/nlc-B`, directory `api/` |
-| Imported from    | `/mnt/c/git/Groovy_MiSTer/api/` (tip `c5b4222`, "82") |
-| Imported on      | 2026-07-24 |
+| Imported from    | `/mnt/c/git/Groovy_MiSTer/api/` (tip `1d886fc`, "91: Reconnect logic fix") |
+| Imported on      | 2026-08-02 |
 | Local delta      | none — straight file copy |
 
 **The upstream goal is zero delta.** Every patch the RPCS3 and PCSX2 forks carried has been absorbed
 upstream, so a re-sync should stay a plain file copy. If a change turns out to be needed here,
 request it upstream rather than editing this directory.
+
+### What this pull carries
+
+Re-synced in response to `docs/CMDSWITCHRES_RECONNECT_HANDOFF.md`: `CmdSwitchres()` was
+fire-and-forget UDP with no ACK, and was lost 100% of the time on the auto-reconnect path (no
+gap between it and the preceding `CmdInit`, unlike the initial connect) — leaving the core
+silently discarding every subsequent blit for the rest of the session. It now returns `int` (0 =
+ACK'd, -1 = failed after 3 retries of `getACK(60)`), mirroring `CmdInit`'s existing pattern. See
+`src/burner/win32/groovy/groovy_output.cpp`'s `GroovyFrameReady()` for the one call site that
+consumes the new return.
+
+This pull also absorbed the two things we'd previously filed upstream ourselves
+(`docs/UPSTREAM_REPORT_groovymister_reconnect_state.md` and `docs/HANDOFF_core_idle_timeout.md`):
+`CmdInit` now calls a new `resetSessionState()` unconditionally at its top, zeroing
+`fpga.frame/frameEcho/vCount/vCountEcho` on every connect *and* reconnect (the actual root cause
+of a 46-second `WaitSync()` hang we'd worked around client-side); `DiffTimeRaster()` now clamps an
+implausible echo/frame spread internally instead of computing a huge sleep (same threshold, 8, as
+our own guard); and a new `CmdSendKeepAlive()` exists (not adopted here — see the comment at
+`groovy_output.cpp`'s `GroovySendRawCmd()` for why the RIO send path is still wrong for an idle
+keepalive on Windows).
 
 ## What was and was not imported
 
