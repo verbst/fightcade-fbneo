@@ -2,6 +2,15 @@
 Fightcade emulator built with FBNeo and GGPO
 Public Release: https://www.fightcade.com
 
+## This Fork
+This fork adds support for Groovy MiSTer (NLC version), to enable fightcade's fbneo to be connected to a CRT, input and audio remotely, enabling play on real CRT and arcade hardware, through a MiSTer DE-10.
+See: https://github.com/verbst/Groovy_MiSTer for more details.
+
+<img width="453" height="568" alt="fightcadea" src="https://github.com/user-attachments/assets/b6552fe4-8274-4040-abf6-3ae656c59f38" />
+<img width="510" height="528" alt="fightcadeb" src="https://github.com/user-attachments/assets/adb14a4f-4870-4a82-aa39-5575547d8be7" />
+
+
+
 ## FinalBurn Neo
 Official Forum: https://neo-source.com
 
